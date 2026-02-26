@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desafio Data Engineering — Setor Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --surface: #111520;
+    --surface2: #161c2e;
+    --border: #1e2840;
+    --accent: #00d4aa;
+    --accent2: #4f8ef7;
+    --accent3: #f7c94f;
+    --danger: #f74f6a;
+    --text: #e2e8f8;
+    --muted: #6b7a99;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG GRID */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.3);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 600px;
+    font-weight: 300;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .meta-item span { color: var(--text); }
+
+  /* SECTIONS */
+  section {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  p { color: var(--muted); margin-bottom: 12px; }
+  p strong { color: var(--text); }
+
+  /* CONTEXT CARD */
+  .context-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    padding: 24px 28px;
+    border-radius: 4px;
+    margin: 24px 0;
+  }
+
+  .context-card p { color: var(--text); margin: 0; font-size: 15px; }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: center;
+    flex-wrap: nowrap;
+    min-width: 600px;
+  }
+
+  .arch-node {
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .arch-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.5;
+    min-width: 110px;
+  }
+
+  .arch-box.bronze { border-top: 2px solid #cd7f32; }
+  .arch-box.silver { border-top: 2px solid #a8b8c8; }
+  .arch-box.gold { border-top: 2px solid var(--accent3); }
+  .arch-box.source { border-top: 2px solid var(--accent2); }
+  .arch-box.serving { border-top: 2px solid var(--accent); }
+
+  .arch-box .layer-name {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .arch-box.bronze .layer-name { color: #cd7f32; }
+  .arch-box.silver .layer-name { color: #a8b8c8; }
+  .arch-box.gold .layer-name { color: var(--accent3); }
+  .arch-box.source .layer-name { color: var(--accent2); }
+  .arch-box.serving .layer-name { color: var(--accent); }
+
+  .arch-arrow {
+    color: var(--border);
+    font-size: 20px;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* DATASET TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin: 20px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  thead tr {
+    background: var(--surface2);
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(30,40,64,0.6);
+    color: var(--text);
+    font-size: 12px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .type-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-family: var(--mono);
+  }
+
+  .type-int { background: rgba(79,142,247,0.15); color: var(--accent2); }
+  .type-str { background: rgba(0,212,170,0.15); color: var(--accent); }
+  .type-float { background: rgba(247,201,79,0.15); color: var(--accent3); }
+  .type-date { background: rgba(247,79,106,0.15); color: var(--danger); }
+  .type-bool { background: rgba(150,100,250,0.15); color: #a78bfa; }
+
+  /* TASKS */
+  .tasks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 28px;
+    position: relative;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .task-card:hover { border-color: rgba(79,142,247,0.4); }
+
+  .task-card.expanded .task-body { display: block; }
+  .task-body { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  .task-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .task-num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--border);
+    line-height: 1;
+    min-width: 40px;
+    transition: color 0.2s;
+  }
+
+  .task-card:hover .task-num { color: var(--accent2); }
+
+  .task-title-wrap { flex: 1; }
+
+  .task-title {
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .task-desc { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .task-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .tag.sql { border-color: rgba(79,142,247,0.4); color: var(--accent2); }
+  .tag.python { border-color: rgba(0,212,170,0.4); color: var(--accent); }
+  .tag.etl { border-color: rgba(247,201,79,0.4); color: var(--accent3); }
+  .tag.cloud { border-color: rgba(247,79,106,0.3); color: var(--danger); }
+  .tag.spark { border-color: rgba(150,100,250,0.4); color: #a78bfa; }
+  .tag.airflow { border-color: rgba(255,160,80,0.4); color: #fb923c; }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 18px;
+    transition: transform 0.2s;
+    margin-top: 2px;
+  }
+
+  .task-card.expanded .chevron { transform: rotate(180deg); color: var(--accent2); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #090c12;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin: 12px 0;
+    position: relative;
+  }
+
+  .code-block .comment { color: #3d5070; }
+  .code-block .keyword { color: var(--accent2); }
+  .code-block .string { color: var(--accent); }
+  .code-block .func { color: var(--accent3); }
+  .code-block .var { color: #e2e8f8; }
+  .code-block .num { color: var(--danger); }
+
+  .code-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  /* SAMPLE DATA */
+  .data-sample {
+    background: #090c12;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    overflow-x: auto;
+    line-height: 1.8;
+    margin: 12px 0;
+    white-space: pre;
+  }
+
+  /* SKILLS MATRIX */
+  .skills-matrix {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .skill-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+
+  .skill-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .skill-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .skill-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    animation: fillBar 1.5s ease forwards;
+    transform-origin: left;
+  }
+
+  @keyframes fillBar { from { width: 0; } }
+
+  .skill-level {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+
+  /* ENTREGAVEIS */
+  .deliverables {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  @media (max-width: 600px) { .deliverables { grid-template-columns: 1fr; } }
+
+  .deliverable-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+
+  .deliverable-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .deliverable-title {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .deliverable-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .tab {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 20px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* NOTICE */
+  .notice {
+    background: rgba(247,201,79,0.07);
+    border: 1px solid rgba(247,201,79,0.2);
+    border-radius: 4px;
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .notice p { color: var(--text); margin: 0; font-size: 14px; }
+  .notice p strong { color: var(--accent3); }
+
+  /* LIST */
+  ul.task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  ul.task-list li {
+    padding: 8px 0;
+    padding-left: 20px;
+    position: relative;
+    color: var(--muted);
+    font-size: 14px;
+    border-bottom: 1px solid rgba(30,40,64,0.4);
+  }
+
+  ul.task-list li:last-child { border-bottom: none; }
+
+  ul.task-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent2);
+    font-size: 12px;
+  }
+
+  ul.task-list li strong { color: var(--text); }
+
+  /* FOOTER */
+  footer {
+    padding: 40px 0;
+    text-align: center;
+  }
+
+  footer p { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  /* PROGRESS INDICATOR */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    z-index: 100;
+    transition: width 0.1s;
+    width: 0%;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="badge">Desafio Técnico · Data Engineering</div>
+    <h1>Banco Digital <span>FinCore</span><br>— Pipeline de Dados</h1>
+    <p class="subtitle">Um desafio completo simulando o ambiente real de um banco digital, cobrindo ingestão, transformação, modelagem e orquestração de dados financeiros.</p>
+    <div class="meta-row">
+      <div class="meta-item">⏱ Duração estimada: <span>15–25h</span></div>
+      <div class="meta-item">📊 Nível: <span>Júnior → Pleno</span></div>
+      <div class="meta-item">🏦 Setor: <span>Financeiro / Banco Digital</span></div>
+    </div>
+  </header>
+
+  <!-- CONTEXTO -->
+  <section>
+    <div class="section-label">01 — Contexto</div>
+    <h2>Cenário do Desafio</h2>
+    <div class="context-card">
+      <p>O <strong>FinCore Bank</strong> é um banco digital com 2 milhões de clientes. O time de Dados precisa construir um pipeline robusto para processar transações financeiras, gerar indicadores de risco e disponibilizar dados analíticos para as áreas de <strong>Compliance, Risco de Crédito e Produtos de Investimento</strong>.</p>
+    </div>
+    <p>Você foi contratado como <strong>Engenheiro de Dados</strong> e sua missão é construir o pipeline de ponta a ponta, desde a ingestão dos dados brutos até as tabelas analíticas consumidas pelos cientistas de dados e analistas de negócio.</p>
+
+    <div class="arch-diagram">
+      <p style="font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; margin-top: 0;">Arquitetura Medallion — Data Lake</p>
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="arch-box source">
+            <div class="layer-name">Source</div>
+            CSV / API<br>Transações<br>Clientes
+          </div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="arch-box bronze">
+            <div class="layer-name">Bronze</div>
+            Raw Ingest<br>sem transform.<br>dados brutos
+          </div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="arch-box silver">
+            <div class="layer-name">Silver</div>
+            Cleaned<br>Dedup / Valid.<br>Normalizado
+          </div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="arch-box gold">
+            <div class="layer-name">Gold</div>
+            Agregações<br>KPIs / Métricas<br>Indicadores
+          </div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="arch-box serving">
+            <div class="layer-name">Serving</div>
+            Analistas<br>Cientistas<br>Dashboards
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATASETS -->
+  <section>
+    <div class="section-label">02 — Datasets</div>
+    <h2>Estrutura dos Dados</h2>
+    <p>O desafio conta com <strong>3 datasets sintéticos</strong> que simulam os sistemas transacionais do FinCore Bank. Abaixo você encontra os schemas e exemplos de dados para gerar localmente.</p>
+
+    <div class="tabs" id="datasetTabs">
+      <div class="tab active" data-tab="t1">transactions</div>
+      <div class="tab" data-tab="t2">customers</div>
+      <div class="tab" data-tab="t3">investments</div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="tab-content active" id="t1">
+      <h3>transactions.csv — Transações Financeiras</h3>
+      <p>Registros diários de todas as transações processadas pelo banco. <strong>~500.000 linhas/mês</strong>. Contém erros intencionais de qualidade (nulos, duplicatas, valores negativos) que você deverá tratar.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Coluna</th><th>Tipo</th><th>Descrição</th><th>Problemas de Qualidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>transaction_id</td><td><span class="type-tag type-str">STRING</span></td><td>UUID da transação</td><td>~2% duplicatas</td></tr>
+            <tr><td>customer_id</td><td><span class="type-tag type-int">INT</span></td><td>ID do cliente</td><td>~1% nulos</td></tr>
+            <tr><td>transaction_date</td><td><span class="type-tag type-date">DATE</span></td><td>Data/hora da transação</td><td>Formatos mistos (BR e ISO)</td></tr>
+            <tr><td>amount</td><td><span class="type-tag type-float">FLOAT</span></td><td>Valor em BRL</td><td>~0.5% valores negativos indevidos</td></tr>
+            <tr><td>transaction_type</td><td><span class="type-tag type-str">STRING</span></td><td>PIX, TED, DOC, Boleto, Cartão</td><td>Valores inconsistentes (minúsc., abrev.)</td></tr>
+            <tr><td>merchant_category</td><td><span class="type-tag type-str">STRING</span></td><td>Categoria do estabelecimento</td><td>~8% nulos</td></tr>
+            <tr><td>status</td><td><span class="type-tag type-str">STRING</span></td><td>completed, failed, pending, reversed</td><td>—</td></tr>
+            <tr><td>channel</td><td><span class="type-tag type-str">STRING</span></td><td>app, web, atm, branch</td><td>—</td></tr>
+            <tr><td>is_fraud_flag</td><td><span class="type-tag type-bool">BOOL</span></td><td>Flag de fraude (sistema legado)</td><td>~15% nulos</td></tr>
+            <tr><td>installments</td><td><span class="type-tag type-int">INT</span></td><td>Número de parcelas</td><td>Null quando não parcelado</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-label">▸ Script Python para gerar o dataset</div>
+      <div class="code-block"><span class="keyword">import</span> <span class="var">pandas</span> <span class="keyword">as</span> <span class="var">pd</span>
+<span class="keyword">import</span> <span class="var">numpy</span> <span class="keyword">as</span> <span class="var">np</span>
+<span class="keyword">import</span> <span class="var">uuid</span>
+<span class="keyword">from</span> <span class="var">datetime</span> <span class="keyword">import</span> <span class="var">datetime, timedelta</span>
+<span class="keyword">import</span> <span class="var">random</span>
+
+<span class="func">random.seed</span>(<span class="num">42</span>)
+<span class="var">np.random.seed</span>(<span class="num">42</span>)
+
+<span class="var">n</span> = <span class="num">100_000</span>  <span class="comment"># aumente para 500k em produção</span>
+
+<span class="var">types_raw</span> = [<span class="string">'PIX'</span>, <span class="string">'pix'</span>, <span class="string">'TED'</span>, <span class="string">'ted'</span>, <span class="string">'DOC'</span>, <span class="string">'Boleto'</span>, <span class="string">'BOLETO'</span>, <span class="string">'Cartão'</span>, <span class="string">'CARTAO'</span>, <span class="string">'cartão'</span>]
+<span class="var">categories</span> = [<span class="string">'Alimentação'</span>, <span class="string">'Transporte'</span>, <span class="string">'Saúde'</span>, <span class="string">'Educação'</span>, <span class="string">'Entretenimento'</span>,
+               <span class="string">'Supermercado'</span>, <span class="string">'Vestuário'</span>, <span class="string">'Serviços'</span>, <span class="string">'Viagem'</span>, <span class="string">None</span>]
+
+<span class="var">base_date</span> = <span class="var">datetime</span>(<span class="num">2024</span>, <span class="num">1</span>, <span class="num">1</span>)
+<span class="var">dates</span> = [<span class="var">base_date</span> + <span class="var">timedelta</span>(<span class="var">days</span>=<span class="var">np.random.randint</span>(<span class="num">0</span>, <span class="num">365</span>)) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="func">range</span>(<span class="var">n</span>)]
+<span class="comment"># Introduz formatos mistos de data</span>
+<span class="var">date_strs</span> = [<span class="var">d.strftime</span>(<span class="string">'%d/%m/%Y %H:%M'</span>) <span class="keyword">if</span> <span class="var">i</span> % <span class="num">3</span> == <span class="num">0</span> <span class="keyword">else</span> <span class="var">d.isoformat</span>()
+             <span class="keyword">for</span> <span class="var">i</span>, <span class="var">d</span> <span class="keyword">in</span> <span class="func">enumerate</span>(<span class="var">dates</span>)]
+
+<span class="var">amounts</span> = <span class="var">np.round</span>(<span class="var">np.random.lognormal</span>(<span class="num">5</span>, <span class="num">1.5</span>, <span class="var">n</span>), <span class="num">2</span>)
+<span class="comment"># Introduz valores negativos indevidos</span>
+<span class="var">amounts</span>[<span class="var">np.random.choice</span>(<span class="var">n</span>, <span class="num">500</span>, <span class="var">replace</span>=<span class="var">False</span>)] *= -<span class="num">1</span>
+
+<span class="var">ids</span> = [<span class="func">str</span>(<span class="var">uuid.uuid4</span>()) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="func">range</span>(<span class="var">n</span>)]
+<span class="comment"># Introduz duplicatas (~2%)</span>
+<span class="var">dup_idx</span> = <span class="var">np.random.choice</span>(<span class="var">n</span>, <span class="num">2000</span>, <span class="var">replace</span>=<span class="var">False</span>)
+<span class="keyword">for</span> <span class="var">i</span> <span class="keyword">in</span> <span class="var">dup_idx</span>:
+    <span class="var">ids</span>[<span class="var">i</span>] = <span class="var">ids</span>[<span class="var">np.random.randint</span>(<span class="num">0</span>, <span class="var">n</span>)]
+
+<span class="var">df</span> = <span class="var">pd.DataFrame</span>({
+    <span class="string">'transaction_id'</span>: <span class="var">ids</span>,
+    <span class="string">'customer_id'</span>: <span class="var">np.random.choice</span>(<span class="func">list</span>(<span class="func">range</span>(<span class="num">1</span>, <span class="num">10001</span>)) + [<span class="var">None</span>]*<span class="num">100</span>, <span class="var">n</span>),
+    <span class="string">'transaction_date'</span>: <span class="var">date_strs</span>,
+    <span class="string">'amount'</span>: <span class="var">amounts</span>,
+    <span class="string">'transaction_type'</span>: <span class="var">np.random.choice</span>(<span class="var">types_raw</span>, <span class="var">n</span>),
+    <span class="string">'merchant_category'</span>: <span class="var">np.random.choice</span>(<span class="var">categories</span>, <span class="var">n</span>),
+    <span class="string">'status'</span>: <span class="var">np.random.choice</span>([<span class="string">'completed'</span>,<span class="string">'failed'</span>,<span class="string">'pending'</span>,<span class="string">'reversed'</span>],
+                                    <span class="var">n</span>, <span class="var">p</span>=[<span class="num">0.85</span>,<span class="num">0.07</span>,<span class="num">0.05</span>,<span class="num">0.03</span>]),
+    <span class="string">'channel'</span>: <span class="var">np.random.choice</span>([<span class="string">'app'</span>,<span class="string">'web'</span>,<span class="string">'atm'</span>,<span class="string">'branch'</span>], <span class="var">n</span>, <span class="var">p</span>=[<span class="num">0.6</span>,<span class="num">0.25</span>,<span class="num">0.1</span>,<span class="num">0.05</span>]),
+    <span class="string">'is_fraud_flag'</span>: <span class="var">np.random.choice</span>([<span class="var">True</span>,<span class="var">False</span>,<span class="var">None</span>], <span class="var">n</span>, <span class="var">p</span>=[<span class="num">0.02</span>,<span class="num">0.83</span>,<span class="num">0.15</span>]),
+    <span class="string">'installments'</span>: [<span class="var">np.random.randint</span>(<span class="num">2</span>,<span class="num">13</span>) <span class="keyword">if</span> <span class="var">r</span> < <span class="num">0.3</span> <span class="keyword">else</span> <span class="var">None</span>
+                      <span class="keyword">for</span> <span class="var">r</span> <span class="keyword">in</span> <span class="var">np.random.random</span>(<span class="var">n</span>)]
+})
+
+<span class="var">df.to_csv</span>(<span class="string">'transactions.csv'</span>, <span class="var">index</span>=<span class="var">False</span>)
+<span class="func">print</span>(<span class="string">f"Dataset gerado: {len(df)} linhas"</span>)</div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="tab-content" id="t2">
+      <h3>customers.csv — Cadastro de Clientes</h3>
+      <p>Base cadastral dos clientes do banco com atributos de perfil e score de crédito. <strong>~10.000 clientes únicos</strong>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th><th>Obs</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>customer_id</td><td><span class="type-tag type-int">INT</span></td><td>Chave primária</td><td>—</td></tr>
+            <tr><td>name</td><td><span class="type-tag type-str">STRING</span></td><td>Nome completo</td><td>—</td></tr>
+            <tr><td>cpf</td><td><span class="type-tag type-str">STRING</span></td><td>CPF (mascarado)</td><td>Formato: ***.XXX.XXX-**</td></tr>
+            <tr><td>birth_date</td><td><span class="type-tag type-date">DATE</span></td><td>Data de nascimento</td><td>—</td></tr>
+            <tr><td>state</td><td><span class="type-tag type-str">STRING</span></td><td>UF de residência</td><td>—</td></tr>
+            <tr><td>income_bracket</td><td><span class="type-tag type-str">STRING</span></td><td>Faixa de renda</td><td>A, B, C, D, E</td></tr>
+            <tr><td>credit_score</td><td><span class="type-tag type-int">INT</span></td><td>Score (0–1000)</td><td>Serasa-like</td></tr>
+            <tr><td>account_type</td><td><span class="type-tag type-str">STRING</span></td><td>checking, savings, premium</td><td>—</td></tr>
+            <tr><td>account_open_date</td><td><span class="type-tag type-date">DATE</span></td><td>Abertura da conta</td><td>—</td></tr>
+            <tr><td>is_active</td><td><span class="type-tag type-bool">BOOL</span></td><td>Conta ativa?</td><td>—</td></tr>
+            <tr><td>churn_risk_score</td><td><span class="type-tag type-float">FLOAT</span></td><td>Probabilidade churn (0–1)</td><td>Output de modelo ML</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-label">▸ Gerador do dataset customers.csv</div>
+      <div class="code-block"><span class="keyword">import</span> <span class="var">pandas</span> <span class="keyword">as</span> <span class="var">pd</span>
+<span class="keyword">import</span> <span class="var">numpy</span> <span class="keyword">as</span> <span class="var">np</span>
+<span class="keyword">from</span> <span class="var">datetime</span> <span class="keyword">import</span> <span class="var">date, timedelta</span>
+<span class="keyword">import</span> <span class="var">random</span>
+
+<span class="func">random.seed</span>(<span class="num">42</span>)
+<span class="var">n</span> = <span class="num">10_000</span>
+<span class="var">states</span> = [<span class="string">'SP'</span>,<span class="string">'RJ'</span>,<span class="string">'MG'</span>,<span class="string">'RS'</span>,<span class="string">'PR'</span>,<span class="string">'BA'</span>,<span class="string">'SC'</span>,<span class="string">'GO'</span>,<span class="string">'PE'</span>,<span class="string">'CE'</span>]
+<span class="var">state_weights</span> = [<span class="num">0.35</span>,<span class="num">0.15</span>,<span class="num">0.12</span>,<span class="num">0.08</span>,<span class="num">0.07</span>,<span class="num">0.06</span>,<span class="num">0.05</span>,<span class="num">0.04</span>,<span class="num">0.04</span>,<span class="num">0.04</span>]
+
+<span class="var">open_dates</span> = [<span class="var">date</span>(<span class="num">2018</span>,<span class="num">1</span>,<span class="num">1</span>) + <span class="var">timedelta</span>(<span class="var">days</span>=<span class="var">np.random.randint</span>(<span class="num">0</span>,<span class="num">2190</span>))
+              <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="func">range</span>(<span class="var">n</span>)]
+
+<span class="var">df</span> = <span class="var">pd.DataFrame</span>({
+    <span class="string">'customer_id'</span>: <span class="func">range</span>(<span class="num">1</span>, <span class="var">n</span>+<span class="num">1</span>),
+    <span class="string">'credit_score'</span>: <span class="var">np.random.randint</span>(<span class="num">200</span>, <span class="num">1001</span>, <span class="var">n</span>),
+    <span class="string">'state'</span>: <span class="var">np.random.choice</span>(<span class="var">states</span>, <span class="var">n</span>, <span class="var">p</span>=<span class="var">state_weights</span>),
+    <span class="string">'income_bracket'</span>: <span class="var">np.random.choice</span>([<span class="string">'A'</span>,<span class="string">'B'</span>,<span class="string">'C'</span>,<span class="string">'D'</span>,<span class="string">'E'</span>], <span class="var">n</span>, <span class="var">p</span>=[<span class="num">0.05</span>,<span class="num">0.15</span>,<span class="num">0.40</span>,<span class="num">0.30</span>,<span class="num">0.10</span>]),
+    <span class="string">'account_type'</span>: <span class="var">np.random.choice</span>([<span class="string">'checking'</span>,<span class="string">'savings'</span>,<span class="string">'premium'</span>], <span class="var">n</span>, <span class="var">p</span>=[<span class="num">0.65</span>,<span class="num">0.25</span>,<span class="num">0.10</span>]),
+    <span class="string">'account_open_date'</span>: <span class="var">open_dates</span>,
+    <span class="string">'is_active'</span>: <span class="var">np.random.choice</span>([<span class="var">True</span>,<span class="var">False</span>], <span class="var">n</span>, <span class="var">p</span>=[<span class="num">0.88</span>,<span class="num">0.12</span>]),
+    <span class="string">'churn_risk_score'</span>: <span class="var">np.round</span>(<span class="var">np.random.beta</span>(<span class="num">2</span>,<span class="num">8</span>,<span class="var">n</span>),<span class="num">4</span>),
+})
+<span class="var">df.to_csv</span>(<span class="string">'customers.csv'</span>, <span class="var">index</span>=<span class="var">False</span>)</div>
+    </div>
+
+    <!-- INVESTMENTS -->
+    <div class="tab-content" id="t3">
+      <h3>investments.csv — Carteira de Investimentos</h3>
+      <p>Posições de investimento dos clientes (CDB, Tesouro Direto, Fundos, Ações). <strong>~25.000 posições ativas</strong>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th><th>Obs</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>position_id</td><td><span class="type-tag type-str">STRING</span></td><td>ID único da posição</td><td>—</td></tr>
+            <tr><td>customer_id</td><td><span class="type-tag type-int">INT</span></td><td>FK para customers</td><td>—</td></tr>
+            <tr><td>product_type</td><td><span class="type-tag type-str">STRING</span></td><td>CDB, LCI, LCA, Tesouro, Fundo, Ação</td><td>—</td></tr>
+            <tr><td>product_name</td><td><span class="type-tag type-str">STRING</span></td><td>Nome do produto</td><td>—</td></tr>
+            <tr><td>invested_amount</td><td><span class="type-tag type-float">FLOAT</span></td><td>Valor aplicado (BRL)</td><td>—</td></tr>
+            <tr><td>current_value</td><td><span class="type-tag type-float">FLOAT</span></td><td>Valor atual (BRL)</td><td>—</td></tr>
+            <tr><td>purchase_date</td><td><span class="type-tag type-date">DATE</span></td><td>Data de compra</td><td>—</td></tr>
+            <tr><td>maturity_date</td><td><span class="type-tag type-date">DATE</span></td><td>Vencimento (se aplicável)</td><td>Null para ações/fundos</td></tr>
+            <tr><td>annual_rate</td><td><span class="type-tag type-float">FLOAT</span></td><td>Taxa anual (% CDI ou %aa)</td><td>—</td></tr>
+            <tr><td>risk_level</td><td><span class="type-tag type-str">STRING</span></td><td>baixo, medio, alto</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAREFAS -->
+  <section>
+    <div class="section-label">03 — Desafios</div>
+    <h2>Tarefas do Pipeline</h2>
+    <p>O desafio é dividido em <strong>6 tarefas progressivas</strong>. Clique em cada uma para ver os detalhes, dicas e o que é esperado.</p>
+
+    <div class="notice">
+      <div class="notice-icon">💡</div>
+      <p><strong>Dica:</strong> Você pode usar as ferramentas que preferir — Pandas, PySpark, dbt, Airflow, BigQuery, DuckDB. O importante é demonstrar os conceitos pedidos e documentar suas decisões técnicas.</p>
+    </div>
+
+    <div class="tasks-grid">
+
+      <!-- TASK 1 -->
+      <div class="task-card" onclick="toggleTask(this)">
+        <div class="task-header">
+          <div class="task-num">01</div>
+          <div class="task-title-wrap">
+            <div class="task-title">Ingestão e Camada Bronze</div>
+            <p class="task-desc">Ler os CSVs brutos e persistir na camada Bronze sem transformações.</p>
+            <div class="task-tags">
+              <span class="tag python">Python</span>
+              <span class="tag etl">ETL</span>
+              <span class="tag">Git</span>
+            </div>
+          </div>
+          <div class="chevron">▾</div>
+        </div>
+        <div class="task-body">
+          <h3>O que fazer</h3>
+          <ul class="task-list">
+            <li>Criar um script Python que leia os 3 CSVs e os persista em formato <strong>Parquet particionado por ano/mês</strong> (pasta <code>bronze/transactions/year=2024/month=01/</code>).</li>
+            <li>Adicionar metadados de ingestão: <strong>ingestion_timestamp</strong>, <strong>source_file</strong>, <strong>row_count</strong>.</li>
+            <li>Criar um log simples de ingestão registrando sucesso/falha de cada arquivo.</li>
+            <li>Versionar tudo no Git com commits semânticos (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>).</li>
+          </ul>
+          <div class="code-label">▸ Estrutura esperada de pastas</div>
+          <div class="data-sample">data-lake/
+├── bronze/
+│   ├── transactions/
+│   │   └── year=2024/
+│   │       ├── month=01/part-0.parquet
+│   │       └── month=02/part-0.parquet
+│   ├── customers/
+│   │   └── customers.parquet
+│   └── investments/
+│       └── investments.parquet
+└── logs/
+    └── ingestion_log.json</div>
+          <div class="code-label">▸ Dica de implementação</div>
+          <div class="code-block"><span class="keyword">import</span> <span class="var">pandas</span> <span class="keyword">as</span> <span class="var">pd</span>
+<span class="keyword">from</span> <span class="var">datetime</span> <span class="keyword">import</span> <span class="var">datetime</span>
+
+<span class="keyword">def</span> <span class="func">ingest_to_bronze</span>(<span class="var">filepath</span>, <span class="var">output_dir</span>):
+    <span class="var">df</span> = <span class="var">pd.read_csv</span>(<span class="var">filepath</span>)
+    <span class="var">df</span>[<span class="string">'ingestion_timestamp'</span>] = <span class="var">datetime.utcnow</span>().<span class="var">isoformat</span>()
+    <span class="var">df</span>[<span class="string">'source_file'</span>] = <span class="var">filepath</span>
+    <span class="comment"># Particionar por ano/mês para transactions</span>
+    <span class="keyword">if</span> <span class="string">'transaction_date'</span> <span class="keyword">in</span> <span class="var">df.columns</span>:
+        <span class="var">df</span>[<span class="string">'year'</span>] = <span class="var">pd.to_datetime</span>(<span class="var">df</span>[<span class="string">'transaction_date'</span>], <span class="var">errors</span>=<span class="string">'coerce'</span>).<span class="var">dt.year</span>
+        <span class="var">df.to_parquet</span>(<span class="var">output_dir</span>, <span class="var">partition_cols</span>=[<span class="string">'year'</span>,<span class="string">'month'</span>], <span class="var">index</span>=<span class="var">False</span>)
+    <span class="keyword">return</span> <span class="func">len</span>(<span class="var">df</span>)</div>
+        </div>
+      </div>
+
+      <!-- TASK 2 -->
+      <div class="task-card" onclick="toggleTask(this)">
+        <div class="task-header">
+          <div class="task-num">02</div>
+          <div class="task-title-wrap">
+            <div class="task-title">Qualidade de Dados — Camada Silver</div>
+            <p class="task-desc">Tratar todos os problemas de qualidade e normalizar os dados.</p>
+            <div class="task-tags">
+              <span class="tag python">Python</span>
+              <span class="tag sql">SQL</span>
+              <span class="tag etl">ETL</span>
+              <span class="tag spark">PySpark</span>
+            </div>
+          </div>
+          <div class="chevron">▾</div>
+        </div>
+        <div class="task-body">
+          <h3>Problemas a resolver em transactions</h3>
+          <ul class="task-list">
+            <li><strong>Duplicatas:</strong> Remover transações duplicadas por <code>transaction_id</code>, mantendo o registro mais recente de ingestão.</li>
+            <li><strong>Datas:</strong> Padronizar todos os formatos de data para ISO 8601 (<code>YYYY-MM-DD HH:MM:SS</code>). Tratar datas inválidas como nulo.</li>
+            <li><strong>transaction_type:</strong> Normalizar valores para uppercase sem acento: PIX, TED, DOC, BOLETO, CARTAO. Criar coluna <code>transaction_type_clean</code>.</li>
+            <li><strong>Valores negativos:</strong> Transações com <code>amount &lt; 0</code> que não são do tipo "reversed" devem ser sinalizadas com <code>data_quality_flag = 'NEGATIVE_AMOUNT'</code>.</li>
+            <li><strong>is_fraud_flag:</strong> Imputar nulos com <code>False</code>. Adicionar coluna <code>fraud_flag_imputed = True</code> quando imputado.</li>
+            <li><strong>merchant_category nulos:</strong> Imputar com a string <code>'OUTROS'</code>.</li>
+          </ul>
+          <h3 style="margin-top:16px">Métricas de qualidade esperadas</h3>
+          <ul class="task-list">
+            <li>Gerar um relatório de qualidade com: % de duplicatas removidas, % de datas inválidas, % de nulos por coluna (antes e depois).</li>
+            <li>Salvar o relatório em <code>logs/quality_report_YYYY-MM-DD.json</code>.</li>
+          </ul>
+          <div class="code-label">▸ Exemplo de relatório de qualidade</div>
+          <div class="data-sample">{
+  "run_date": "2024-06-15T10:30:00",
+  "source": "transactions",
+  "rows_before": 100000,
+  "rows_after": 97843,
+  "duplicates_removed": 2157,
+  "null_summary": {
+    "customer_id": { "before_pct": 1.02, "after_pct": 1.02 },
+    "merchant_category": { "before_pct": 8.31, "after_pct": 0.0 },
+    "is_fraud_flag": { "before_pct": 15.2, "after_pct": 0.0 }
+  }
+}</div>
+        </div>
+      </div>
+
+      <!-- TASK 3 -->
+      <div class="task-card" onclick="toggleTask(this)">
+        <div class="task-header">
+          <div class="task-num">03</div>
+          <div class="task-title-wrap">
+            <div class="task-title">Modelagem Analítica — Camada Gold</div>
+            <p class="task-desc">Criar tabelas analíticas agregadas para consumo pelos times de negócio.</p>
+            <div class="task-tags">
+              <span class="tag sql">SQL</span>
+              <span class="tag python">Python</span>
+              <span class="tag spark">PySpark</span>
+            </div>
+          </div>
+          <div class="chevron">▾</div>
+        </div>
+        <div class="task-body">
+          <h3>Tabelas a criar</h3>
+          <ul class="task-list">
+            <li>
+              <strong>gold.customer_transaction_summary</strong> — uma linha por cliente com: total de transações, volume total, ticket médio, tipo de transação mais frequente, data da última transação, total de transações com flag de fraude, e percentual de transações via app.
+            </li>
+            <li>
+              <strong>gold.monthly_volume_by_state</strong> — volume financeiro e quantidade de transações agrupados por mês e UF do cliente (requer JOIN com customers). Use window functions para calcular crescimento MoM (Month over Month).
+            </li>
+            <li>
+              <strong>gold.fraud_risk_profile</strong> — tabela de perfil de risco com: customer_id, credit_score, churn_risk_score, total_transactions, fraud_count, fraud_rate, avg_amount, investment_total, risk_segment (segmentação em "BAIXO", "MÉDIO", "ALTO" baseada nas métricas).
+            </li>
+          </ul>
+          <div class="code-label">▸ Query SQL exemplo — Monthly MoM Growth</div>
+          <div class="code-block"><span class="keyword">WITH</span> <span class="var">monthly_agg</span> <span class="keyword">AS</span> (
+  <span class="keyword">SELECT</span>
+    <span class="func">DATE_TRUNC</span>(<span class="string">'month'</span>, <span class="var">t.transaction_date</span>) <span class="keyword">AS</span> <span class="var">month</span>,
+    <span class="var">c.state</span>,
+    <span class="func">COUNT</span>(*) <span class="keyword">AS</span> <span class="var">tx_count</span>,
+    <span class="func">SUM</span>(<span class="var">t.amount</span>) <span class="keyword">AS</span> <span class="var">total_volume</span>
+  <span class="keyword">FROM</span> <span class="var">silver.transactions</span> <span class="var">t</span>
+  <span class="keyword">JOIN</span> <span class="var">silver.customers</span> <span class="var">c</span> <span class="keyword">ON</span> <span class="var">t.customer_id</span> = <span class="var">c.customer_id</span>
+  <span class="keyword">WHERE</span> <span class="var">t.status</span> = <span class="string">'completed'</span>
+  <span class="keyword">GROUP BY</span> <span class="num">1</span>, <span class="num">2</span>
+)
+<span class="keyword">SELECT</span>
+  *,
+  <span class="func">LAG</span>(<span class="var">total_volume</span>) <span class="keyword">OVER</span> (
+    <span class="keyword">PARTITION BY</span> <span class="var">state</span>
+    <span class="keyword">ORDER BY</span> <span class="var">month</span>
+  ) <span class="keyword">AS</span> <span class="var">prev_month_volume</span>,
+  <span class="func">ROUND</span>(
+    (<span class="var">total_volume</span> - <span class="func">LAG</span>(<span class="var">total_volume</span>) <span class="keyword">OVER</span> (<span class="keyword">PARTITION BY</span> <span class="var">state</span> <span class="keyword">ORDER BY</span> <span class="var">month</span>))
+    / <span class="func">NULLIF</span>(<span class="func">LAG</span>(<span class="var">total_volume</span>) <span class="keyword">OVER</span> (<span class="keyword">PARTITION BY</span> <span class="var">state</span> <span class="keyword">ORDER BY</span> <span class="var">month</span>), <span class="num">0</span>) * <span class="num">100</span>, <span class="num">2</span>
+  ) <span class="keyword">AS</span> <span class="var">mom_growth_pct</span>
+<span class="keyword">FROM</span> <span class="var">monthly_agg</span>;</div>
+        </div>
+      </div>
+
+      <!-- TASK 4 -->
+      <div class="task-card" onclick="toggleTask(this)">
+        <div class="task-header">
+          <div class="task-num">04</div>
+          <div class="task-title-wrap">
+            <div class="task-title">Orquestração com Apache Airflow</div>
+            <p class="task-desc">Automatizar o pipeline com uma DAG que executa diariamente.</p>
+            <div class="task-tags">
+              <span class="tag airflow">Airflow</span>
+              <span class="tag python">Python</span>
+              <span class="tag etl">ETL</span>
+            </div>
+          </div>
+          <div class="chevron">▾</div>
+        </div>
+        <div class="task-body">
+          <h3>Estrutura da DAG</h3>
+          <ul class="task-list">
+            <li>Criar uma DAG chamada <strong>fincore_pipeline</strong> com schedule <code>@daily</code>.</li>
+            <li><strong>Task 1 — ingest_raw:</strong> Executa o script de ingestão Bronze.</li>
+            <li><strong>Task 2 — validate_quality:</strong> Roda as validações de qualidade e grava o relatório. Usa <code>ShortCircuitOperator</code> para abortar se a taxa de erro ultrapassar 5%.</li>
+            <li><strong>Task 3 — transform_silver:</strong> Executa as transformações de limpeza.</li>
+            <li><strong>Task 4 — build_gold:</strong> Cria as tabelas analíticas.</li>
+            <li><strong>Task 5 — notify_success:</strong> Envia uma notificação (pode ser apenas um log com métricas do run).</li>
+          </ul>
+          <div class="code-label">▸ Estrutura da DAG</div>
+          <div class="code-block"><span class="keyword">from</span> <span class="var">airflow</span> <span class="keyword">import</span> <span class="var">DAG</span>
+<span class="keyword">from</span> <span class="var">airflow.operators.python</span> <span class="keyword">import</span> <span class="var">PythonOperator, ShortCircuitOperator</span>
+<span class="keyword">from</span> <span class="var">datetime</span> <span class="keyword">import</span> <span class="var">datetime, timedelta</span>
+
+<span class="keyword">with</span> <span class="var">DAG</span>(
+    <span class="var">dag_id</span>=<span class="string">'fincore_pipeline'</span>,
+    <span class="var">schedule_interval</span>=<span class="string">'@daily'</span>,
+    <span class="var">start_date</span>=<span class="var">datetime</span>(<span class="num">2024</span>, <span class="num">1</span>, <span class="num">1</span>),
+    <span class="var">catchup</span>=<span class="var">False</span>,
+    <span class="var">default_args</span>={<span class="string">'retries'</span>: <span class="num">2</span>, <span class="string">'retry_delay'</span>: <span class="var">timedelta</span>(<span class="var">minutes</span>=<span class="num">5</span>)}
+) <span class="keyword">as</span> <span class="var">dag</span>:
+
+    <span class="var">ingest</span> = <span class="var">PythonOperator</span>(
+        <span class="var">task_id</span>=<span class="string">'ingest_raw'</span>, <span class="var">python_callable</span>=<span class="var">ingest_bronze</span>)
+
+    <span class="var">validate</span> = <span class="var">ShortCircuitOperator</span>(
+        <span class="var">task_id</span>=<span class="string">'validate_quality'</span>, <span class="var">python_callable</span>=<span class="var">check_quality_threshold</span>)
+
+    <span class="var">silver</span> = <span class="var">PythonOperator</span>(
+        <span class="var">task_id</span>=<span class="string">'transform_silver'</span>, <span class="var">python_callable</span>=<span class="var">transform_to_silver</span>)
+
+    <span class="var">gold</span> = <span class="var">PythonOperator</span>(
+        <span class="var">task_id</span>=<span class="string">'build_gold'</span>, <span class="var">python_callable</span>=<span class="var">build_gold_tables</span>)
+
+    <span class="var">ingest</span> >> <span class="var">validate</span> >> <span class="var">silver</span> >> <span class="var">gold</span></div>
+        </div>
+      </div>
+
+      <!-- TASK 5 -->
+      <div class="task-card" onclick="toggleTask(this)">
+        <div class="task-header">
+          <div class="task-num">05</div>
+          <div class="task-title-wrap">
+            <div class="task-title">Detecção de Anomalias (Fraude)</div>
+            <p class="task-desc">Criar regras de negócio para identificar transações suspeitas.</p>
+            <div class="task-tags">
+              <span class="tag sql">SQL</span>
+              <span class="tag python">Python</span>
+              <span class="tag spark">PySpark</span>
+            </div>
+          </div>
+          <div class="chevron">▾</div>
+        </div>
+        <div class="task-body">
+          <h3>Regras a implementar</h3>
+          <ul class="task-list">
+            <li><strong>Regra 1 — Velocidade:</strong> Cliente com mais de <strong>5 transações em 10 minutos</strong> deve ser flagrado como suspeito.</li>
+            <li><strong>Regra 2 — Valor atípico:</strong> Transação com valor acima de <strong>3 desvios padrão</strong> do histórico do cliente.</li>
+            <li><strong>Regra 3 — Geo-impossível:</strong> Cliente realiza transação via <code>branch</code> em UF diferente da UF cadastrada no mesmo dia.</li>
+            <li><strong>Regra 4 — Horário incomum:</strong> Transações entre 00h–05h com valor acima de R$ 5.000.</li>
+          </ul>
+          <p>Crie uma tabela <strong>gold.fraud_alerts</strong> com todas as transações suspeitas, indicando qual regra foi acionada e um <code>risk_score</code> (número de regras violadas simultaneamente).</p>
+        </div>
+      </div>
+
+      <!-- TASK 6 -->
+      <div class="task-card" onclick="toggleTask(this)">
+        <div class="task-header">
+          <div class="task-num">06</div>
+          <div class="task-title-wrap">
+            <div class="task-title">Desafio Bônus — Cloud & Streaming</div>
+            <p class="task-desc">Extensão do pipeline para ambiente cloud com dados em tempo real.</p>
+            <div class="task-tags">
+              <span class="tag cloud">GCP / AWS</span>
+              <span class="tag spark">Kafka</span>
+              <span class="tag airflow">Streaming</span>
+            </div>
+          </div>
+          <div class="chevron">▾</div>
+        </div>
+        <div class="task-body">
+          <div class="notice">
+            <div class="notice-icon">⭐</div>
+            <p><strong>Bônus:</strong> Esta tarefa é opcional e representa o nível Pleno/Sênior. Implemente ao menos um dos cenários abaixo.</p>
+          </div>
+          <ul class="task-list">
+            <li><strong>Opção A — GCP:</strong> Reescrever o pipeline usando BigQuery como Data Warehouse, Cloud Storage para o Data Lake e Cloud Scheduler + Cloud Functions para orquestração. Usar <code>bq load</code> ou a API do BigQuery via Python.</li>
+            <li><strong>Opção B — Streaming:</strong> Simular um produtor Kafka que emite novas transações a cada segundo. Criar um consumer que aplica as regras de fraude em tempo real e grava alertas em um tópico separado (<code>fraud_alerts_stream</code>).</li>
+            <li><strong>Opção C — dbt:</strong> Substituir as transformações SQL das camadas Silver e Gold por modelos dbt, com testes de schema (<code>not_null</code>, <code>unique</code>, <code>accepted_values</code>) e documentação automática.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SKILLS COVERAGE -->
+  <section>
+    <div class="section-label">04 — Cobertura de Skills</div>
+    <h2>O que você vai treinar</h2>
+    <p>Mapeamento de cada skill das vagas analisadas com a cobertura deste desafio.</p>
+    <div class="skills-matrix">
+      <div class="skill-item">
+        <div class="skill-name">SQL Avançado</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div>
+        <div class="skill-level">Tasks 3, 5 — Window Functions, CTEs, JOINs</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Python / Pandas</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div>
+        <div class="skill-level">Tasks 1, 2 — Ingestão, limpeza, automação</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">ETL / ELT</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:100%"></div></div>
+        <div class="skill-level">Tasks 1–4 — Pipeline completo Bronze→Gold</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Modelagem de Dados</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div>
+        <div class="skill-level">Task 3 — Medallion, Star Schema</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Qualidade de Dados</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div>
+        <div class="skill-level">Task 2 — Validações, relatórios, flags</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Apache Airflow</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div>
+        <div class="skill-level">Task 4 — DAGs, Operators, Scheduling</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Git / Versionamento</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div>
+        <div class="skill-level">Task 1 — Commits semânticos, estrutura</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">PySpark</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:70%"></div></div>
+        <div class="skill-level">Tasks 2, 3 — Alternativa ao Pandas</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Cloud (GCP/AWS)</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:60%"></div></div>
+        <div class="skill-level">Task 6 (Bônus) — BigQuery, Storage</div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">Kafka / Streaming</div>
+        <div class="skill-bar"><div class="skill-fill" style="width:55%"></div></div>
+        <div class="skill-level">Task 6 (Bônus) — Producer/Consumer</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENTREGÁVEIS -->
+  <section>
+    <div class="section-label">05 — Entregáveis</div>
+    <h2>O que você deve entregar</h2>
+
+    <div class="deliverables">
+      <div class="deliverable-card">
+        <div class="deliverable-icon">📁</div>
+        <div class="deliverable-title">Repositório Git</div>
+        <p class="deliverable-desc">Código organizado em pastas (<code>ingestion/</code>, <code>transform/</code>, <code>dags/</code>, <code>sql/</code>) com README explicando como rodar o projeto.</p>
+      </div>
+      <div class="deliverable-card">
+        <div class="deliverable-icon">📊</div>
+        <div class="deliverable-title">Relatório de Qualidade</div>
+        <p class="deliverable-desc">JSON ou Markdown com métricas de qualidade dos dados antes e depois das transformações.</p>
+      </div>
+      <div class="deliverable-card">
+        <div class="deliverable-icon">🗃️</div>
+        <div class="deliverable-title">Tabelas Gold em Parquet</div>
+        <p class="deliverable-desc">Os 3 datasets analíticos da camada Gold (<code>customer_summary</code>, <code>monthly_volume</code>, <code>fraud_risk_profile</code>).</p>
+      </div>
+      <div class="deliverable-card">
+        <div class="deliverable-icon">📋</div>
+        <div class="deliverable-title">Documentação Técnica</div>
+        <p class="deliverable-desc">Arquivo <code>DECISIONS.md</code> explicando as escolhas técnicas, trade-offs e o que você faria diferente com mais tempo.</p>
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top: 24px;">
+      <div class="notice-icon">🎯</div>
+      <p><strong>Dica final:</strong> Foque primeiro nas Tasks 1–3. Elas já cobrem 80% das exigências das vagas júnior e pleno. As Tasks 4–6 são diferenciais. Documente cada decisão técnica — recrutadores de dados valorizam muito o raciocínio por trás do código.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Desafio FinCore Bank · Data Engineering · Gerado para fins de estudo e prática profissional</p>
+  </footer>
+
+</div>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+  });
+
+  // Task accordion
+  function toggleTask(el) {
+    el.classList.toggle('expanded');
+  }
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabsEl = tab.closest('.tabs');
+      const parent = tabsEl.parentElement;
+      const targetId = tab.dataset.tab;
+
+      tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(targetId).classList.add('active');
+    });
+  });
+
+  // Animate skill bars on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.skill-fill').forEach(bar => {
+          bar.style.animation = 'none';
+          bar.offsetHeight;
+          bar.style.animation = 'fillBar 1.5s ease forwards';
+        });
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelector('.skills-matrix') && observer.observe(document.querySelector('.skills-matrix'));
+</script>
+</body>
+</html>
